@@ -12,6 +12,7 @@ module.exports = class Snockets
   constructor: (@options = {}) ->
     @options.src ?= '.'
     @options.async ?= true
+    @options.mangle ?= true
     @cache = {}
     @concatCache = {}
     @depGraph = new DepGraph
@@ -85,7 +86,7 @@ module.exports = class Snockets
           result = @concatCache[filePath].minifiedData.toString 'utf8'
           concatenationChanged = false
         else
-          result = minify concatenation
+          result = minify concatenation, @options.mangle
           @concatCache[filePath].minifiedData = new Buffer(result)
       else
         result = concatenation
@@ -312,11 +313,11 @@ stripExt = (filePath) ->
 jsExts = ->
   (".#{ext}" for ext of compilers).concat '.js'
 
-minify = (js) ->
+minify = (js, mangle) ->
   jsp = uglify.parser
   pro = uglify.uglify
   ast = jsp.parse js
-  ast = pro.ast_mangle ast
+  ast = pro.ast_mangle ast if mangle
   ast = pro.ast_squeeze ast
   pro.gen_code ast
 
